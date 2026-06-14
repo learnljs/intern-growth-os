@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}用户管理 - 实习能量站{% endblock %}
+{% block content %}
+<style>
+.form-select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 6px; min-width: 120px; }
+.assign-form { display: flex; align-items: center; gap: 8px; }
+.assign-form select { padding: 6px 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 13px; }
+.assign-form button { padding: 6px 12px; background: {{ theme.primary }}; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px; }
+</style>
+
+<div class="page-header">
+    <h1>👥 用户管理</h1>
+    <p>管理系统用户和导师分配</p>
+</div>
+
+<div class="card">
+    <h3 style="margin-bottom:16px;">用户列表</h3>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>姓名</th><th>邮箱</th><th>角色</th><th>部门</th><th>岗位</th><th>分配导师</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td><strong>{{ u.name }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>
+                    <span class="badge badge-{% if u.role=='admin' %}danger{% elif u.role=='mentor' %}info{% elif u.role=='leader' %}success{% else %}ok{% endif %}">
+                        {% if u.role=='admin' %}管理员{% elif u.role=='mentor' %}导师{% elif u.role=='leader' %}Leader{% else %}实习生{% endif %}
+                    </span>
+                </td>
+                <td>{{ u.department }}</td>
+                <td>{{ u.position }}</td>
+                <td>
+                    {% if u.role == 'intern' %}
+                    <form method="POST" action="{{ url_for('admin_assign_mentor') }}" class="assign-form">
+                        <input type="hidden" name="intern_user_id" value="{{ u.id }}">
+                        <select name="mentor_id">
+                            <option value="">-- 选择导师 --</option>
+                            {% for m in mentors %}
+                            <option value="{{ m.id }}" {% if u.mentor_id == m.id %}selected{% endif %}>{{ m.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <button type="submit">分配</button>
+                    </form>
+                    {% else %}
+                    <span class="text-muted">-</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span style="font-size:0.75rem;color:#999;">{{ u.created_at[:10] }}</span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endblock %}

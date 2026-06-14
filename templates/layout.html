@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% set role_colors = {
+    'intern': {'primary': '#F5A623', 'primary_dark': '#E09000', 'primary_light': '#FFD180', 'bg': '#FFF8E1'},
+    'mentor': {'primary': '#4CAF50', 'primary_dark': '#388E3C', 'primary_light': '#A5D6A7', 'bg': '#E8F5E9'},
+    'leader': {'primary': '#9C27B0', 'primary_dark': '#7B1FA2', 'primary_light': '#CE93D8', 'bg': '#F3E5F5'},
+    'admin': {'primary': '#607D8B', 'primary_dark': '#455A64', 'primary_light': '#B0BEC5', 'bg': '#ECEFF1'}
+} %}
+{% set theme = role_colors.get(current_user.role, role_colors.intern) %}
+
+{% block body %}
+<div class="layout">
+    <aside class="sidebar" style="border-top: 3px solid {{ theme.primary }};">
+        <div class="sidebar-brand">
+            <h2>🌱 实习能量站</h2>
+            <div class="subtitle">Intern Growth OS</div>
+        </div>
+
+        {% if current_user %}
+        <div class="sidebar-user">
+            <div class="avatar" style="background:{{ theme.primary }};">{{ current_user.name[0] }}</div>
+            <div class="name">{{ current_user.name }}</div>
+            <div class="role" style="color:{{ theme.primary_dark }};">
+                {% if current_user.role == 'intern' %}实习生
+                {% elif current_user.role == 'mentor' %}带教导师
+                {% elif current_user.role == 'leader' %}部门主管
+                {% elif current_user.role == 'admin' %}管理员
+                {% endif %}
+            </div>
+            <div style="clear:both"></div>
+        </div>
+
+        <nav class="sidebar-nav">
+            {% if current_user.role == 'intern' %}
+            <a href="{{ url_for('intern_dashboard') }}" class="{% if request.endpoint == 'intern_dashboard' %}active{% endif %}">
+                <span class="icon">🏠</span> 我的主页
+            </a>
+            <a href="{{ url_for('intern_growth_map') }}" class="{% if request.endpoint == 'intern_growth_map' %}active{% endif %}">
+                <span class="icon">🗺️</span> 成长分析
+            </a>
+            <a href="{{ url_for('intern_tasks') }}" class="{% if request.endpoint == 'intern_tasks' %}active{% endif %}">
+                <span class="icon">📋</span> 成长任务
+            </a>
+            <a href="{{ url_for('intern_weekly_report') }}" class="{% if request.endpoint in ['intern_weekly_report', 'intern_weekly_report_edit', 'intern_feedback'] %}active{% endif %}">
+                <span class="icon">📚</span> 成长周记
+            </a>
+            <a href="{{ url_for('intern_score_history') }}" class="{% if request.endpoint == 'intern_score_history' %}active{% endif %}">
+                <span class="icon">📊</span> 评分历史
+            </a>
+            <a href="{{ url_for('intern_learning') }}" class="{% if request.endpoint == 'intern_learning' %}active{% endif %}">
+                <span class="icon">📖</span> 学习资料
+            </a>
+
+            {% elif current_user.role == 'mentor' %}
+            <a href="{{ url_for('mentor_dashboard') }}" class="{% if request.endpoint == 'mentor_dashboard' %}active{% endif %}">
+                <span class="icon">🏠</span> 驾驶舱
+            </a>
+            <a href="{{ url_for('mentor_tasks') }}" class="{% if request.endpoint == 'mentor_tasks' %}active{% endif %}">
+                <span class="icon">📋</span> 任务管理
+            </a>
+            <a href="{{ url_for('mentor_feedback') }}" class="{% if request.endpoint == 'mentor_feedback' %}active{% endif %}">
+                <span class="icon">💬</span> 反馈管理
+            </a>
+            <a href="{{ url_for('mentor_plan') }}" class="{% if request.endpoint == 'mentor_plan' %}active{% endif %}">
+                <span class="icon">📅</span> 培养计划
+            </a>
+            <a href="{{ url_for('mentor_ai_copilot') }}" class="{% if request.endpoint == 'mentor_ai_copilot' %}active{% endif %}">
+                <span class="icon">🤖</span> AI 带教助手
+            </a>
+
+            {% elif current_user.role == 'leader' %}
+            <a href="{{ url_for('leader_dashboard') }}" class="{% if request.endpoint == 'leader_dashboard' %}active{% endif %}">
+                <span class="icon">🏠</span> 部门概况
+            </a>
+            <a href="{{ url_for('leader_reports') }}" class="{% if request.endpoint == 'leader_reports' %}active{% endif %}">
+                <span class="icon">📋</span> 周报审阅
+            </a>
+            <a href="{{ url_for('leader_high_potential') }}" class="{% if request.endpoint == 'leader_high_potential' %}active{% endif %}">
+                <span class="icon">🏆</span> 高潜人才
+            </a>
+            <a href="{{ url_for('leader_materials') }}" class="{% if request.endpoint == 'leader_materials' %}active{% endif %}">
+                <span class="icon">📚</span> 学习资料
+            </a>
+
+            {% elif current_user.role == 'admin' %}
+            <a href="{{ url_for('admin_users') }}" class="{% if request.endpoint == 'admin_users' %}active{% endif %}">
+                <span class="icon">👥</span> 用户管理
+            </a>
+            <a href="{{ url_for('admin_skills') }}" class="{% if request.endpoint == 'admin_skills' %}active{% endif %}">
+                <span class="icon">🌳</span> 技能树管理
+            </a>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <a href="{{ url_for('logout') }}">🚪 退出登录</a>
+        </div>
+        {% endif %}
+    </aside>
+
+    <main class="main-content">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="flash flash-info">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

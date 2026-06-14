@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+{% block title %}反馈记录 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>💬 反馈记录</h1>
+    <p>导师给予的反馈和建议</p>
+</div>
+
+{% for f in feedbacks %}
+<div class="card">
+    <div class="flex-between" style="margin-bottom:8px;">
+        <div class="flex-center gap-8">
+            <span class="badge badge-{% if f.type=='weekly' %}info{% elif f.type=='milestone' %}success{% else %}warning{% endif %}">
+                {% if f.type=='weekly' %}周度反馈{% elif f.type=='milestone' %}里程碑反馈{% else %}即时反馈{% endif %}
+            </span>
+            <span style="font-weight:600;">来自 {{ f.mentor_name }}</span>
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">{{ f.created_at[:10] }}</div>
+    </div>
+    {% if f.rating %}
+    <div style="margin-bottom:8px;">评分: {% for i in range(f.rating) %}⭐{% endfor %}</div>
+    {% endif %}
+    <div style="font-size:0.85rem; color:var(--text-secondary); line-height:1.6;">{{ f.content }}</div>
+</div>
+{% endfor %}
+
+{% if not feedbacks %}
+<div class="card text-center text-muted" style="padding:40px;">暂无反馈记录</div>
+{% endif %}
+{% endblock %}

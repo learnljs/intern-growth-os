@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}登录 - 实习能量站{% endblock %}
+{% block body %}
+{% set role = request.args.get('role', '') %}
+{% set role_colors = {
+    'intern': {'primary': '#F5A623', 'bg': '#FFF8E1', 'name': '实习生'},
+    'mentor': {'primary': '#4CAF50', 'bg': '#E8F5E9', 'name': '带教导师'},
+    'leader': {'primary': '#9C27B0', 'bg': '#F3E5F5', 'name': '部门主管'},
+    'admin': {'primary': '#607D8B', 'bg': '#ECEFF1', 'name': '管理员'}
+} %}
+{% set color = role_colors.get(role, {'primary': '#F5A623', 'bg': '#FFF8E1', 'name': ''}) %}
+
+<style>
+.auth-page { background: {{ color.bg }}; }
+.auth-card { border-top: 4px solid {{ color.primary }}; }
+.auth-card button { background: {{ color.primary }} !important; }
+.auth-card button:hover { opacity: 0.9; }
+.auth-card a { color: {{ color.primary }}; }
+.role-badge {
+    display: inline-block;
+    padding: 4px 16px;
+    background: {{ color.primary }};
+    color: white;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    margin-bottom: 16px;
+}
+</style>
+
+<div class="auth-page">
+    <div class="auth-card">
+        <a href="{{ url_for('index') }}" style="text-decoration:none; color:inherit;">
+            <h1>🌱 实习能量站</h1>
+        </a>
+        <div class="subtitle">Intern Growth OS</div>
+        {% if role %}
+        <div class="role-badge">{{ color.name }}登录</div>
+        {% endif %}
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        {% for msg in messages %}
+        <div class="flash flash-error">{{ msg }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST">
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" name="email" class="form-control" placeholder="请输入邮箱" required>
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" name="password" class="form-control" placeholder="请输入密码" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block" style="padding:12px; font-size:1rem;">登 录</button>
+        </form>
+        <div class="form-footer">
+            还没有账号？<a href="{{ url_for('register', role=role) }}">立即注册</a>
+        </div>
+        <div class="form-footer" style="margin-top:8px;">
+            <a href="{{ url_for('index') }}" style="color:var(--text-muted);">← 返回首页</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

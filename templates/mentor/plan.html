@@ -1,0 +1,125 @@
+{% extends "layout.html" %}
+{% block title %}培养计划 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📅 培养计划</h1>
+    <p>为每位实习生制定针对性的成长方案</p>
+</div>
+
+{% for i in interns %}
+<div class="card mb-16" id="intern-{{ i.id }}">
+    <div class="flex-between" style="align-items: center;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="avatar" style="width:48px; height:48px; min-width:48px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; font-size:18px; font-weight:600;">{{ i.name[0] }}</div>
+            <div>
+                <div style="font-weight:600; font-size:16px; color:#333;">{{ i.name }}</div>
+                <div class="text-muted" style="font-size:12px; margin-top:2px;">Lv.{{ i.level }} · {{ i.position or '未设置岗位' }}</div>
+            </div>
+        </div>
+        <button onclick="generatePlan({{ i.id }}, '{{ i.name }}')" class="btn btn-primary btn-sm" id="btn-{{ i.id }}">🤖 生成培养计划</button>
+    </div>
+    
+    <div class="grid grid-3" style="gap:12px; margin-top:16px;">
+        <div style="text-align:center; padding:8px; background:#f5f5f5; border-radius:8px;">
+            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ i.xp }}</div>
+            <div class="text-muted" style="font-size:0.75rem;">经验值 XP</div>
+        </div>
+        <div style="text-align:center; padding:8px; background:#f5f5f5; border-radius:8px;">
+            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ (i.completion_rate * 100) | round }}%</div>
+            <div class="text-muted" style="font-size:0.75rem;">任务完成率</div>
+        </div>
+        <div style="text-align:center; padding:8px; background:#f5f5f5; border-radius:8px;">
+            <div style="font-size:1.5rem; font-weight:700; color:var(--primary);">{{ '%.1f' | format(i.avg_rating) }}</div>
+            <div class="text-muted" style="font-size:0.75rem;">平均评分</div>
+        </div>
+    </div>
+    
+    {% if i.scores %}
+    <div style="margin-top:16px;">
+        <div style="font-size:0.8rem; font-weight:600; margin-bottom:8px;">六维能力评分</div>
+        <div style="display:flex; gap:16px; align-items:center; flex-wrap:wrap;">
+            <div class="radar-container" style="width:180px; height:180px;">
+                <canvas id="radar-{{ i.id }}" width="180" height="180"></canvas>
+            </div>
+            <div style="flex:1; display:grid; grid-template-columns:repeat(3, 1fr); gap:8px;">
+                {% for name, score in i.scores.items() %}
+                <div style="text-align:center; padding:8px; background:#f5f5f5; border-radius:8px;">
+                    <div style="font-size:1.2rem; font-weight:600; color:var(--primary);">{{ score }}</div>
+                    <div style="font-size:0.7rem; color:var(--text-muted);">{{ name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div id="plan-{{ i.id }}" style="margin-top:16px; display:none;">
+        <div class="card-header">📋 个性化培养计划</div>
+        <div id="plan-content-{{ i.id }}" style="padding:16px; background:#fafafa; border-radius:8px; font-size:0.85rem; white-space:pre-wrap;"></div>
+    </div>
+    <div id="plan-loading-{{ i.id }}" style="margin-top:16px; display:none; text-align:center; padding:16px;">
+        <div style="color:var(--primary);">🤖 AI 正在分析数据生成培养计划...</div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not interns %}
+<div class="card text-center text-muted" style="padding:40px;">暂无分配的实习生</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+{% for i in interns %}
+{% if i.scores %}
+new Chart(document.getElementById('radar-{{ i.id }}'), {
+    type: 'radar',
+    data: {
+        labels: {{ i.scores.keys() | list | tojson }},
+        datasets: [{
+            data: {{ i.scores.values() | list | tojson }},
+            backgroundColor: 'rgba(245,166,35,0.15)',
+            borderColor: '#F5A623',
+            borderWidth: 2,
+            pointBackgroundColor: '#F5A623',
+            pointRadius: 3,
+        }]
+    },
+    options: {
+        responsive: false,
+        scales: { r: { min: 0, max: 100, ticks: { stepSize: 25, font: { size: 9 }, display: false }, pointLabels: { font: { size: 10 } } } },
+        plugins: { legend: { display: false } }
+    }
+});
+{% endif %}
+{% endfor %}
+
+async function generatePlan(internId, name) {
+    const planDiv = document.getElementById('plan-' + internId);
+    const contentDiv = document.getElementById('plan-content-' + internId);
+    const loadingDiv = document.getElementById('plan-loading-' + internId);
+    const btn = document.getElementById('btn-' + internId);
+    
+    planDiv.style.display = 'block';
+    loadingDiv.style.display = 'block';
+    contentDiv.style.display = 'none';
+    btn.disabled = true;
+    btn.innerHTML = '生成中...';
+    
+    try {
+        const response = await fetch('/api/mentor/plan/' + internId);
+        const data = await response.json();
+        loadingDiv.style.display = 'none';
+        contentDiv.innerHTML = data.error ? '<div style="color:var(--danger);">生成失败：' + data.error + '</div>' : data.plan;
+        contentDiv.style.display = 'block';
+    } catch (err) {
+        loadingDiv.style.display = 'none';
+        contentDiv.innerHTML = '<div style="color:var(--danger);">网络错误，请稍后再试</div>';
+        contentDiv.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '🤖 重新生成';
+}
+</script>
+{% endblock %}

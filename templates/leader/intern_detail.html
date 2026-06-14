@@ -1,0 +1,150 @@
+{% extends "layout.html" %}
+{% block title %}{{ profile.name }} - 实习生详情{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('leader_dashboard') }}" style="color:var(--primary); text-decoration:none; font-size:0.9rem;">← 返回部门概况</a>
+    <h1>📊 {{ profile.name }} - 成长档案</h1>
+    <p>{{ profile.position }} · {{ profile.department }} · 导师: {{ profile.mentor_name or '未分配' }}</p>
+</div>
+
+<div class="grid grid-2 mb-16">
+    <div class="card">
+        <div class="card-header">🎯 基本信息</div>
+        <div style="display:flex; align-items:center; gap:16px; margin-bottom:16px;">
+            <div class="level-badge" style="font-size:1.2rem;">Lv.{{ profile.level }}</div>
+            <div>
+                <div style="font-weight:600;">{{ profile.name }}</div>
+                <div class="text-muted" style="font-size:0.8rem;">{{ profile.position }} · 入职 {{ profile.start_date }}</div>
+            </div>
+        </div>
+        <div style="font-size:0.85rem; color:var(--text-secondary);">
+            经验值: {{ profile.xp }}XP · 状态: <span class="badge badge-{{ profile.status }}">{{ profile.status }}</span>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">📊 能力总览</div>
+        <div class="grid grid-2">
+            {% for name, score in scores.items() %}
+            <div class="dim-bar-group">
+                <div class="dim-bar-label">
+                    <span>{{ name }}</span>
+                    <span>{{ score }}/100</span>
+                </div>
+                <div class="dim-bar">
+                    <div class="dim-bar-fill" style="width:{{ score }}%"></div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2 mb-16">
+    <div class="card">
+        <div class="card-header" style="color:var(--success);">💪 优势领域</div>
+        {% for name, score in strengths %}
+        <div style="padding:8px 0; border-bottom:1px solid var(--border);">
+            <div class="flex-between">
+                <span>{{ name }}</span>
+                <span style="font-weight:600; color:var(--success);">{{ score }}/100</span>
+            </div>
+            <div class="dim-bar" style="margin-top:4px;">
+                <div class="dim-bar-fill" style="width:{{ score }}%; background:linear-gradient(90deg, #4CAF50, #81C784);"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <div class="card-header" style="color:var(--warning);">🔍 待提升领域</div>
+        {% for name, score in weaknesses %}
+        <div style="padding:8px 0; border-bottom:1px solid var(--border);">
+            <div class="flex-between">
+                <span>{{ name }}</span>
+                <span style="font-weight:600; color:var(--warning);">{{ score }}/100</span>
+            </div>
+            <div class="dim-bar" style="margin-top:4px;">
+                <div class="dim-bar-fill" style="width:{{ score }}%; background:linear-gradient(90deg, #FF9800, #FFB74D);"></div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card mb-16">
+    <div class="card-header">📈 评分变化历史</div>
+    {% if score_history %}
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border); text-align:center;">
+                    <th style="padding:8px; width:150px;">时间</th>
+                    {% for dim in dimension_names %}
+                    <th style="padding:8px;">{{ dim }}</th>
+                    {% endfor %}
+                    <th style="padding:8px; width:100px;">操作人</th>
+                    <th style="padding:8px; width:100px;">原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in score_history %}
+                <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:8px; color:var(--text-muted); text-align:left;">{{ record.time }}</td>
+                    {% for dim in dimension_names %}
+                    <td style="padding:8px; text-align:center;">
+                        {% if record.dimensions.get(dim) %}
+                            <span style="font-weight:600; color:var(--primary-dark);">{{ record.dimensions[dim] }}</span>
+                        {% else %}
+                            <span style="color:var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td style="padding:8px; text-align:center;">{{ record.changed_by }}</td>
+                    <td style="padding:8px; text-align:center; color:var(--text-secondary);">{{ record.change_reason }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-muted text-center" style="padding:20px;">暂无评分历史</div>
+    {% endif %}
+</div>
+
+<div class="grid grid-2 mb-16">
+    <div class="card">
+        <div class="card-header">📋 任务完成情况</div>
+        <div style="display:flex; gap:16px; margin-bottom:12px; font-size:0.85rem;">
+            <span>已完成: <strong style="color:var(--success);">{{ task_stats.get('completed', 0) }}</strong></span>
+            <span>进行中: <strong style="color:var(--primary);">{{ task_stats.get('in_progress', 0) }}</strong></span>
+            <span>待开始: <strong>{{ task_stats.get('pending', 0) }}</strong></span>
+            <span>已逾期: <strong style="color:var(--danger);">{{ task_stats.get('overdue', 0) }}</strong></span>
+        </div>
+        {% for t in tasks[:5] %}
+        <div style="padding:8px 0; border-bottom:1px solid var(--border); font-size:0.85rem;">
+            <div class="flex-between">
+                <span>{{ t.title }}</span>
+                <span class="badge badge-{{ t.status }}">{{ t.status }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="card">
+        <div class="card-header">💬 最近反馈</div>
+        {% for f in feedbacks %}
+        <div style="padding:8px 0; border-bottom:1px solid var(--border);">
+            <div class="flex-between" style="font-size:0.85rem;">
+                <span>{{ f.mentor_name }}</span>
+                <span class="text-muted">{{ f.created_at[:10] }}</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">{{ f.content[:100] }}{% if f.content|length > 100 %}...{% endif %}</div>
+        </div>
+        {% endfor %}
+        {% if not feedbacks %}
+        <div class="text-muted text-center" style="padding:20px;">暂无反馈</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

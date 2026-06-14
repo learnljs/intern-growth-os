@@ -1,0 +1,61 @@
+{% extends "layout.html" %}
+{% block title %}部门概况 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🏠 {{ department }} - 部门人才概况</h1>
+    <p>查看部门实习生的成长状态和能力分析</p>
+</div>
+
+<div class="grid grid-3 mb-16">
+    <div class="stat-card">
+        <div class="stat-value">{{ interns | length }}</div>
+        <div class="stat-label">部门实习生</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">Lv.{{ avg_level }}</div>
+        <div class="stat-label">平均等级</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ interns | selectattr('level', 'ge', 4) | list | length }}</div>
+        <div class="stat-label">高潜人才</div>
+    </div>
+</div>
+
+<div class="card mb-16">
+    <div class="card-header">👥 实习生概览</div>
+    <div class="table-wrap">
+    <table>
+        <thead>
+            <tr><th>姓名</th><th>岗位</th><th>导师</th><th>等级</th><th>经验值</th><th>平均能力分</th><th>操作</th></tr>
+        </thead>
+        <tbody>
+            {% for i in interns %}
+            <tr>
+                <td><strong>{{ i.name }}</strong></td>
+                <td>{{ i.position }}</td>
+                <td>{{ i.mentor_name or '-' }}</td>
+                <td><span class="level-badge" style="font-size:0.7rem;">Lv.{{ i.level }}</span></td>
+                <td>{{ i.xp }}XP</td>
+                <td>
+                    <span style="font-weight:600; color:{% if i.avg_score >= 70 %}var(--success){% elif i.avg_score >= 50 %}var(--primary){% else %}var(--warning){% endif %};">
+                        {{ i.avg_score }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{{ url_for('leader_intern_detail', intern_id=i.id) }}" class="btn btn-sm btn-secondary">查看详情</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">⚡ 快速入口</div>
+    <div class="flex gap-8">
+        <a href="{{ url_for('leader_high_potential') }}" class="btn btn-primary">🏆 高潜人才</a>
+        <a href="{{ url_for('leader_materials') }}" class="btn btn-primary">📚 发布学习资料</a>
+    </div>
+</div>
+{% endblock %}

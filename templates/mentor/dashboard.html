@@ -1,0 +1,102 @@
+{% extends "layout.html" %}
+{% block title %}导师驾驶舱 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>🏠 导师驾驶舱</h1>
+    <p>管理你的实习生，查看团队成长状态</p>
+</div>
+
+<!-- 我的实习生 -->
+<div class="card">
+    <div class="card-header">👥 我的实习生（{{ interns | length }}人）</div>
+    <div class="grid grid-3" style="gap:12px;">
+        {% for i in interns %}
+        <a href="{{ url_for('mentor_intern_detail', intern_id=i.id) }}" style="text-decoration:none;">
+            <div class="card" style="margin-bottom:0; cursor:pointer; transition:transform 0.2s; border:1px solid var(--border);">
+                <div class="flex-center gap-8" style="margin-bottom:8px;">
+                    <div class="avatar">{{ i.name[0] }}</div>
+                    <div>
+                        <div style="font-weight:600;">{{ i.name }}</div>
+                        <div class="text-muted" style="font-size:0.75rem;">{{ i.position }}</div>
+                    </div>
+                </div>
+                <div class="flex-between">
+                    <span class="level-badge" style="font-size:0.75rem;">Lv.{{ i.level }}</span>
+                    <span class="badge badge-{{ i.risk }}">
+                        {% if i.risk == 'ok' %}正常{% elif i.risk == 'warning' %}需关注{% else %}风险{% endif %}
+                    </span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- 待办事项 -->
+    <div class="card" style="display:flex; flex-direction:column;">
+        <div class="card-header">🔔 待办事项</div>
+        <div style="flex:1; max-height:300px; overflow-y:auto;">
+            {% for r in pending_reports %}
+            <div class="todo-item" style="padding:12px; border-bottom:1px solid var(--border); font-size:0.85rem; cursor:pointer;" onclick="markDone(this, 'report', {{ r.id }})">
+                <div class="flex-between">
+                    <span>
+                        <span class="badge badge-info">周报</span>
+                        {{ r.intern_name }} - 第{{ r.week_number }}周
+                    </span>
+                    <span style="color:var(--primary); font-size:0.75rem;">点击完成</span>
+                </div>
+                <div class="text-muted" style="font-size:0.75rem;">{{ r.submitted_at[:10] }}</div>
+            </div>
+            {% endfor %}
+            {% for t in overdue_tasks %}
+            <div class="todo-item" style="padding:12px; border-bottom:1px solid var(--border); font-size:0.85rem; cursor:pointer;" onclick="markDone(this, 'task', {{ t.id }})">
+                <div class="flex-between">
+                    <span>
+                        <span class="badge badge-danger">逾期</span>
+                        {{ t.intern_name }} - {{ t.title }}
+                    </span>
+                    <span style="color:var(--primary); font-size:0.75rem;">点击完成</span>
+                </div>
+                <div class="text-muted" style="font-size:0.75rem;">截止 {{ t.due_date }}</div>
+            </div>
+            {% endfor %}
+            {% if not pending_reports and not overdue_tasks %}
+            <div class="text-muted text-center" style="padding:40px;">🎉 暂无待办事项</div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 快速操作 -->
+    <div class="card" style="display:flex; flex-direction:column;">
+        <div class="card-header">⚡ 快速操作</div>
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; gap:12px; padding:16px 0;">
+            <a href="{{ url_for('mentor_feedback') }}" class="btn btn-primary btn-block" style="padding:16px;">💬 给实习生写反馈</a>
+            <a href="{{ url_for('mentor_plan') }}" class="btn btn-secondary btn-block" style="padding:16px;">📅 查看培养计划</a>
+            <a href="{{ url_for('mentor_ai_copilot') }}" class="btn btn-secondary btn-block" style="padding:16px;">🤖 AI 带教助手</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function markDone(el, type, id) {
+    if (!confirm('确定已完成？')) return;
+    try {
+        const response = await fetch('/api/mentor/mark-done', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: type, id: id })
+        });
+        if (response.ok) {
+            el.style.opacity = '0.5';
+            el.style.pointerEvents = 'none';
+            setTimeout(() => el.remove(), 300);
+        }
+    } catch (err) {
+        alert('操作失败');
+    }
+}
+</script>
+{% endblock %}

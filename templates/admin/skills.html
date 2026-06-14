@@ -1,0 +1,117 @@
+{% extends "layout.html" %}
+{% block title %}技能树管理 - 实习能量站{% endblock %}
+{% block content %}
+<style>
+.skills-container { display: flex; gap: 30px; flex-wrap: wrap; }
+.skill-tree-wrapper { flex: 1; min-width: 350px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); border-radius: 16px; padding: 24px; }
+.skill-tree-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 3px solid {{ theme.primary }}; }
+.skill-tree-header h3 { margin: 0; font-size: 20px; color: {{ theme.primary_dark }}; }
+.tree-level { position: relative; padding-left: 30px; margin-bottom: 16px; }
+.tree-level::before { content: ''; position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, {{ theme.primary }}, {{ theme.primary_light }}); border-radius: 2px; }
+.tree-node { position: relative; background: white; border-radius: 12px; padding: 16px; margin-bottom: 8px; border: 2px solid #dee2e6; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: all 0.3s; cursor: pointer; }
+.tree-node:hover { border-color: {{ theme.primary }}; transform: translateX(4px); box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+.tree-node::before { content: ''; position: absolute; left: -24px; top: 50%; transform: translateY(-50%); width: 16px; height: 2px; background: {{ theme.primary_light }}; }
+.tree-node::after { content: '🌟'; position: absolute; left: -30px; top: 50%; transform: translateY(-50%); font-size: 14px; }
+.node-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.node-name { font-weight: 600; font-size: 15px; color: #333; }
+.node-level { background: {{ theme.bg }}; color: {{ theme.primary_dark }}; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+.node-stats { display: flex; gap: 16px; font-size: 13px; color: #666; }
+.node-stats span { display: flex; align-items: center; gap: 4px; }
+.node-desc { font-size: 13px; color: #888; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; }
+.node-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn-delete { background: #dc3545; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.btn-edit { background: {{ theme.primary_light }}; color: {{ theme.primary_dark }}; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.add-panel { background: white; border-radius: 16px; padding: 24px; min-width: 320px; box-shadow: 0 4px 16px rgba(0,0,0,0.08); height: fit-content; position: sticky; top: 20px; }
+.add-panel h3 { margin: 0 0 20px 0; color: {{ theme.primary_dark }}; padding-bottom: 12px; border-bottom: 2px solid {{ theme.bg }}; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; transition: border-color 0.3s; box-sizing: border-box; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: {{ theme.primary }}; }
+.btn-add { width: 100%; padding: 12px; background: linear-gradient(135deg, {{ theme.primary }} 0%, {{ theme.primary_dark }} 100%); color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.2s; }
+.btn-add:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.empty-tree { text-align: center; padding: 40px; color: #999; }
+.empty-tree p { margin: 8px 0; }
+</style>
+
+<div class="page-header">
+    <h1>🌳 技能树管理</h1>
+    <p>设计和管理各岗位的技能成长路径</p>
+</div>
+
+<div class="skills-container">
+    <div class="add-panel">
+        <h3>✨ 添加技能节点</h3>
+        <form method="POST" action="{{ url_for('admin_add_skill') }}">
+            <div class="form-group">
+                <label>岗位分类</label>
+                <select name="position" required style="width: 100%; padding: 10px 12px; border: 2px solid #e9ecef; border-radius: 8px; font-size: 14px; box-sizing: border-box;">
+                    <option value="">-- 请选择岗位 --</option>
+                    {% for pos in available_positions %}
+                    <option value="{{ pos }}">{{ pos }}</option>
+                    {% endfor %}
+                </select>
+                <small style="color: #999; font-size: 11px; margin-top: 4px; display: block;">岗位来自实习生注册时填写的岗位</small>
+            </div>
+            <div class="form-group">
+                <label>技能名称</label>
+                <input type="text" name="name" required placeholder="如：React 基础">
+            </div>
+            <div class="form-group">
+                <label>所需等级 (Lv.)</label>
+                <input type="number" name="level_required" value="1" min="1" max="10">
+            </div>
+            <div class="form-group">
+                <label>XP 奖励</label>
+                <input type="number" name="xp_reward" value="100" min="0">
+            </div>
+            <div class="form-group">
+                <label>技能描述</label>
+                <textarea name="description" placeholder="简要描述此技能的要点..."></textarea>
+            </div>
+            <button type="submit" class="btn-add">🌱 添加技能</button>
+        </form>
+    </div>
+
+    <div class="skill-tree-wrapper">
+        {% if not skill_map %}
+        <div class="empty-tree">
+            <div style="font-size:48px;margin-bottom:16px;">🌱</div>
+            <p><strong>暂无技能树</strong></p>
+            <p>在左侧添加第一个技能节点开始构建技能树</p>
+        </div>
+        {% else %}
+        {% for position, skills in skill_map.items() %}
+        <div class="skill-tree-header">
+            <h3>{{ position }}</h3>
+            <span style="background:{{ theme.bg }};padding:6px 14px;border-radius:20px;font-size:13px;color:{{ theme.primary_dark }};">
+                {{ skills|length }} 个技能
+            </span>
+        </div>
+        
+        <div class="tree-level">
+            {% for skill in skills %}
+            <div class="tree-node">
+                <div class="node-header">
+                    <span class="node-name">{{ skill.name }}</span>
+                    <span class="node-level">Lv.{{ skill.level_required }}</span>
+                </div>
+                <div class="node-stats">
+                    <span>💎 {{ skill.xp_reward }} XP</span>
+                    <span>#{{ skill.sort_order }}</span>
+                </div>
+                {% if skill.description %}
+                <div class="node-desc">{{ skill.description }}</div>
+                {% endif %}
+                <div class="node-actions">
+                    <form method="POST" action="{{ url_for('admin_delete_skill', template_id=skill.id) }}" style="display:inline;">
+                        <button type="submit" class="btn-delete" onclick="return confirm('确定删除「{{ skill.name }}」？')">🗑️ 删除</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

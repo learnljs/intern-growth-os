@@ -1,0 +1,210 @@
+{% extends "layout.html" %}
+{% block title %}周报 - 实习能量站{% endblock %}
+{% block content %}
+<style>
+.write-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.write-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.write-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.write-toggle { font-size: 14px; transition: transform 0.2s; color: #999; }
+.write-form { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
+.write-form.active { display: block; }
+.current-week-info { background: {{ theme.bg }}; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: {{ theme.primary_dark }}; }
+.submitted-notice { background: #FFF3E0; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; color: #E65100; }
+
+.report-item { padding: 14px 0; border-bottom: 1px solid #eee; }
+.report-item:last-child { border-bottom: none; }
+.report-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.report-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.week-badge { background: {{ theme.bg }}; color: {{ theme.primary_dark }}; padding: 4px 12px; border-radius: 16px; font-size: 13px; font-weight: 600; }
+.report-date { font-size: 12px; color: #999; }
+.expand-icon { font-size: 12px; transition: transform 0.2s; color: #999; }
+.report-detail { display: none; margin-top: 12px; }
+.report-content-box { padding: 14px; background: #f8f9fa; border-radius: 8px; font-size: 14px; line-height: 1.7; white-space: pre-wrap; }
+
+.feedback-section { margin-top: 12px; padding: 14px; border-radius: 8px; }
+.mentor-section { background: {{ theme.bg }}; border-left: 3px solid {{ theme.primary }}; }
+.leader-section { background: #F3E5F5; border-left: 3px solid #9C27B0; }
+.feedback-section .section-title { font-weight: 600; font-size: 14px; margin-bottom: 8px; }
+.feedback-section .section-text { font-size: 13px; color: #555; line-height: 1.6; white-space: pre-wrap; }
+.feedback-section .section-meta { font-size: 11px; color: #999; margin-top: 6px; }
+
+.dimensions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 10px; padding: 10px; background: white; border-radius: 6px; }
+.dim-item { font-size: 12px; color: #555; padding: 6px 10px; background: #f8f9fa; border-radius: 6px; display: flex; justify-content: space-between; }
+.dim-name { color: #888; }
+.dim-score { font-weight: 600; color: {{ theme.primary_dark }}; }
+</style>
+
+<div class="page-header">
+    <h1>📝 周报</h1>
+    <p>记录每周成长，获得导师反馈</p>
+</div>
+
+<!-- 写新周报（可折叠） -->
+<div class="write-card">
+    <div class="write-header" onclick="toggleWriteForm()">
+        <div class="write-title">
+            ✍️ 提交新周报
+            <span style="font-size: 12px; font-weight: normal; color: #999;">（点击展开）</span>
+        </div>
+        <span class="write-toggle" id="write-toggle">▼</span>
+    </div>
+    
+    <div class="write-form" id="write-form">
+        {% if current_week_submitted %}
+        <div class="submitted-notice">
+            ⚠️ 第{{ current_week }}周的周报已经提交过了，不能重复提交。如需修改，请在下方周报历史中编辑。
+        </div>
+        {% else %}
+        <div class="current-week-info">
+            📅 当前周数：<strong>第{{ current_week }}周</strong>（按入职时间自动计算）
+        </div>
+        <form method="POST">
+            <div class="form-group">
+                <label>自评分（1-5星）</label>
+                <select name="self_rating" class="form-control">
+                    <option value="1">⭐ 1分 - 需要很大改进</option>
+                    <option value="2">⭐⭐ 2分 - 有进步空间</option>
+                    <option value="3" selected>⭐⭐⭐ 3分 - 表现一般</option>
+                    <option value="4">⭐⭐⭐⭐ 4分 - 表现不错</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5分 - 非常优秀</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>本周工作内容</label>
+                <textarea name="content" class="form-control" rows="6" required placeholder="记录你本周完成的工作、学到的知识、遇到的问题等..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">提交周报</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 周报历史 -->
+<div class="card">
+    <div class="card-header">📚 周报历史</div>
+    {% for r in reports %}
+    <div class="report-item">
+        <div class="report-header" onclick="toggleReport({{ r.id }})">
+            <div class="report-meta">
+                <span class="week-badge">第{{ r.week_number }}周</span>
+                <span style="font-size: 13px;">自评: {% for i in range(r.self_rating) %}⭐{% endfor %}</span>
+                {% if r.mentor_comment or r.feedback %}
+                <span style="color: {{ theme.primary }}; font-size: 12px;" title="有导师评价">💬 导师</span>
+                {% endif %}
+                {% if r.leader_comment %}
+                <span style="color: #9C27B0; font-size: 12px;" title="有主管建议">🎯 主管</span>
+                {% endif %}
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span class="report-date">{{ r.submitted_at[:10] }}</span>
+                <span class="expand-icon" id="icon-{{ r.id }}">▶</span>
+            </div>
+        </div>
+        <div class="report-detail" id="detail-{{ r.id }}">
+            <!-- 周报内容 -->
+            <div style="font-weight: 600; font-size: 13px; margin: 12px 0 8px 0; color: #333;">📝 周报内容</div>
+            <div class="report-content-box">{{ r.content }}</div>
+            
+            <!-- 导师评语 -->
+            {% if r.mentor_comment %}
+            <div class="feedback-section mentor-section">
+                <div class="section-title">💬 导师评语</div>
+                <div class="section-text">{{ r.mentor_comment }}</div>
+                {% if r.mentor_reviewed_at %}
+                <div class="section-meta">评语时间: {{ r.mentor_reviewed_at[:10] }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- 导师反馈（含六维评分） -->
+            {% if r.feedback %}
+            <div class="feedback-section mentor-section">
+                <div class="section-title">
+                    💬 导师反馈
+                    {% if r.feedback.rating %}
+                    <span style="font-weight: normal; margin-left: 8px;">{% for i in range(r.feedback.rating) %}⭐{% endfor %}</span>
+                    {% endif %}
+                </div>
+                <div class="section-text">{{ r.feedback.content }}</div>
+                {% if r.feedback.dimension_scores %}
+                <div class="dimensions-grid">
+                    <div class="dim-item">
+                        <span class="dim-name">技术能力</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('1', '-') }}</span>
+                    </div>
+                    <div class="dim-item">
+                        <span class="dim-name">沟通协作</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('2', '-') }}</span>
+                    </div>
+                    <div class="dim-item">
+                        <span class="dim-name">业务理解</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('3', '-') }}</span>
+                    </div>
+                    <div class="dim-item">
+                        <span class="dim-name">主动成长</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('4', '-') }}</span>
+                    </div>
+                    <div class="dim-item">
+                        <span class="dim-name">问题解决</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('5', '-') }}</span>
+                    </div>
+                    <div class="dim-item">
+                        <span class="dim-name">工程素养</span>
+                        <span class="dim-score">{{ r.feedback.dimension_scores.get('6', '-') }}</span>
+                    </div>
+                </div>
+                {% endif %}
+                <div class="section-meta">{{ r.feedback.mentor_name }} · {{ r.feedback.created_at[:10] }}</div>
+            </div>
+            {% endif %}
+            
+            <!-- 主管建议 -->
+            {% if r.leader_comment %}
+            <div class="feedback-section leader-section">
+                <div class="section-title">🎯 主管建议</div>
+                <div class="section-text">{{ r.leader_comment }}</div>
+                {% if r.leader_reviewed_at %}
+                <div class="section-meta">建议时间: {{ r.leader_reviewed_at[:10] }}</div>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            {% if r.week_number == current_week %}
+            <div style="margin-top: 12px;">
+                <a href="{{ url_for('intern_weekly_report_edit', report_id=r.id) }}" class="btn btn-sm btn-secondary">✏️ 编辑</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+    {% if not reports %}
+    <div style="padding: 40px; text-align: center; color: #999;">暂无周报记录</div>
+    {% endif %}
+</div>
+
+<script>
+function toggleWriteForm() {
+    const form = document.getElementById('write-form');
+    const toggle = document.getElementById('write-toggle');
+    if (form.classList.contains('active')) {
+        form.classList.remove('active');
+        toggle.style.transform = 'rotate(0deg)';
+    } else {
+        form.classList.add('active');
+        toggle.style.transform = 'rotate(180deg)';
+    }
+}
+
+function toggleReport(id) {
+    const detail = document.getElementById('detail-' + id);
+    const icon = document.getElementById('icon-' + id);
+    if (detail.style.display === 'none' || detail.style.display === '') {
+        detail.style.display = 'block';
+        icon.style.transform = 'rotate(90deg)';
+    } else {
+        detail.style.display = 'none';
+        icon.style.transform = 'rotate(0deg)';
+    }
+}
+</script>
+{% endblock %}

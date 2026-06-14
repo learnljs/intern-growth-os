@@ -1,0 +1,111 @@
+{% extends "layout.html" %}
+{% block title %}学习资料 - 实习能量站{% endblock %}
+{% block head %}
+<link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+<style>
+.ql-toolbar {
+    border: 1px solid var(--border) !important;
+    border-bottom: none !important;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0 !important;
+    background: var(--bg-secondary);
+}
+.ql-container {
+    border: 1px solid var(--border) !important;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm) !important;
+    font-size: 0.9rem;
+}
+.ql-editor {
+    min-height: 250px;
+    padding: 12px;
+}
+.ql-editor.ql-blank::before {
+    color: var(--text-muted);
+    font-style: normal;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📚 学习资料管理</h1>
+    <p>发布和管理部门学习资料</p>
+</div>
+
+<div class="card mb-16">
+    <div class="card-header">✍️ 发布新资料</div>
+    <form method="POST">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label>标题</label>
+                <input type="text" name="title" class="form-control" placeholder="资料标题" required>
+            </div>
+            <div class="form-group">
+                <label>分类</label>
+                <select name="category" class="form-control">
+                    <option value="technical">技术分享</option>
+                    <option value="business">业务知识</option>
+                    <option value="communication">沟通协作</option>
+                    <option value="growth">成长指南</option>
+                    <option value="general">综合资料</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>内容</label>
+            <div id="editor-container" style="height: 300px; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm);"></div>
+            <input type="hidden" name="content" id="content-hidden" required>
+        </div>
+        <button type="submit" class="btn btn-primary">发布资料</button>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-header">📋 已发布的资料</div>
+    {% for m in materials %}
+    <div style="padding:16px 0; border-bottom:1px solid var(--border);">
+        <div class="flex-between">
+            <div>
+                <span class="badge badge-{% if m.category=='technical' %}info{% elif m.category=='business' %}success{% elif m.category=='communication' %}warning{% else %}ok{% endif %}" style="font-size:0.7rem;">
+                    {% if m.category=='technical' %}技术{% elif m.category=='business' %}业务{% elif m.category=='communication' %}沟通{% elif m.category=='growth' %}成长{% else %}综合{% endif %}
+                </span>
+                <span style="font-weight:600; margin-left:8px;">{{ m.title }}</span>
+            </div>
+            <div class="text-muted" style="font-size:0.75rem;">{{ m.created_at[:10] }} · {{ m.author_name }}</div>
+        </div>
+        <div style="margin-top:8px; font-size:0.85rem; color:var(--text-secondary); max-height:100px; overflow:hidden;">{{ m.content|safe }}</div>
+    </div>
+    {% endfor %}
+    {% if not materials %}
+    <div class="text-muted text-center" style="padding:40px;">暂无学习资料</div>
+    {% endif %}
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Quill editor
+    var quill = new Quill('#editor-container', {
+        theme: 'snow',
+        placeholder: '在此输入内容...',
+        modules: {
+            toolbar: [
+                [{ 'header': [1, 2, 3, false] }],
+                ['bold', 'italic', 'underline', 'strike'],
+                [{ 'color': [] }, { 'background': [] }],
+                [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                [{ 'align': [] }],
+                ['link', 'image'],
+                ['clean']
+            ]
+        }
+    });
+
+    // Handle form submission
+    var form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        // Get HTML content from Quill editor
+        var content = quill.root.innerHTML;
+        document.getElementById('content-hidden').value = content;
+    });
+});
+</script>
+{% endblock %}

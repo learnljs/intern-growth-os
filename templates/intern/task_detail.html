@@ -1,0 +1,120 @@
+{% extends "layout.html" %}
+{% block title %}{{ assignment.title }} - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('intern_tasks') }}" style="color:var(--primary); text-decoration:none; font-size:0.9rem;">← 返回任务列表</a>
+    <h1>{{ assignment.title }}</h1>
+</div>
+
+<div class="grid grid-2">
+    <div>
+        <div class="card">
+            <div class="card-header">📋 任务信息</div>
+            <div style="margin-bottom:12px;">
+                <span class="badge badge-{{ assignment.status }}">{{ assignment.status }}</span>
+                <span class="badge badge-info" style="margin-left:8px;">{{ assignment.category }}</span>
+            </div>
+            <p style="color:var(--text-secondary); line-height:1.6; margin-bottom:16px;">{{ assignment.description }}</p>
+            <div style="display:flex; gap:24px; font-size:0.85rem; color:var(--text-muted);">
+                <span>难度: {% for i in range(assignment.difficulty) %}⭐{% endfor %}</span>
+                <span style="color:var(--primary-dark); font-weight:600;">+{{ assignment.xp_reward }}XP</span>
+                <span>截止: {{ assignment.due_date }}</span>
+            </div>
+            {% if assignment.completed_at %}
+            <div style="margin-top:12px; padding:8px 12px; background:#e8f5e9; border-radius:6px; font-size:0.85rem; color:#2e7d32;">
+                ✅ 已完成于 {{ assignment.completed_at[:10] }}
+            </div>
+            {% endif %}
+        </div>
+
+        {% if skill_node %}
+        <div class="card">
+            <div class="card-header">🌳 关联技能</div>
+            <div style="display:flex; align-items:center; gap:12px; padding:8px 0;">
+                <div class="skill-icon" style="font-size:1.5rem;">{% if skill_node.level_required <= assignment.difficulty %}✅{% else %}🔒{% endif %}</div>
+                <div>
+                    <div style="font-weight:600;">{{ skill_node.name }}</div>
+                    <div class="text-muted" style="font-size:0.8rem;">{{ skill_node.description }}</div>
+                    <div style="font-size:0.75rem; color:var(--text-muted); margin-top:4px;">Lv.{{ skill_node.level_required }} · +{{ skill_node.xp_reward }}XP</div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if similar_tasks %}
+        <div class="card">
+            <div class="card-header">💡 相似任务推荐</div>
+            {% for t in similar_tasks %}
+            <a href="{{ url_for('intern_task_detail', assignment_id=t.id) }}" style="display:block; padding:8px 0; border-bottom:1px solid var(--border); text-decoration:none; color:inherit;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span class="badge badge-{{ t.status }}" style="font-size:0.7rem;">{{ t.status }}</span>
+                        <span style="font-weight:500; font-size:0.85rem; margin-left:4px;">{{ t.title }}</span>
+                    </div>
+                    <span style="color:var(--primary-dark); font-weight:600; font-size:0.8rem;">+{{ t.xp_reward }}XP</span>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div>
+        {% if assignment.status != 'completed' %}
+        <div class="card">
+            <div class="card-header">📝 提交任务</div>
+            <form method="POST" action="{{ url_for('submit_task', assignment_id=assignment.id) }}">
+                <textarea name="content" rows="5" placeholder="粘贴你的代码、链接或心得..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; font-family:monospace; font-size:0.85rem; resize:vertical;"></textarea>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <button type="submit" class="btn btn-primary">提交内容</button>
+                    {% if assignment.status == 'pending' %}
+                    <form method="POST" action="{{ url_for('start_task', assignment_id=assignment.id) }}" style="display:inline;">
+                        <button class="btn btn-secondary">开始任务</button>
+                    </form>
+                    {% elif assignment.status == 'in_progress' %}
+                    <form method="POST" action="{{ url_for('complete_task', assignment_id=assignment.id) }}" style="display:inline;">
+                        <button class="btn btn-success">完成任务</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+        {% else %}
+        <div class="card" style="background:linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%); border:1px solid #a5d6a7;">
+            <div style="text-align:center; padding:20px;">
+                <div style="font-size:2rem; margin-bottom:8px;">🎉</div>
+                <div style="font-size:1.1rem; font-weight:600; color:#2e7d32;">任务已完成！</div>
+                <div style="color:#388e3c; margin-top:4px;">获得 +{{ assignment.xp_reward }}XP</div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if submissions %}
+        <div class="card">
+            <div class="card-header">📤 我的提交</div>
+            {% for s in submissions %}
+            <div style="padding:10px 0; border-bottom:1px solid var(--border);">
+                <div class="text-muted" style="font-size:0.75rem;">{{ s.submitted_at[:16] }}</div>
+                <div style="margin-top:4px; font-size:0.85rem; white-space:pre-wrap; font-family:monospace; background:var(--bg-secondary); padding:8px; border-radius:4px;">{{ s.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if feedbacks %}
+        <div class="card">
+            <div class="card-header">💬 导师评价</div>
+            {% for f in feedbacks %}
+            <div style="padding:10px 0; border-bottom:1px solid var(--border);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:500; font-size:0.85rem;">{{ f.mentor_name }}</span>
+                    <span style="color:var(--primary-dark); font-weight:600;">{{ f.rating }}/5</span>
+                </div>
+                <div style="font-size:0.85rem; color:var(--text-secondary);">{{ f.content }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

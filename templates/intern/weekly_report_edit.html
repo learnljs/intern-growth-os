@@ -1,0 +1,44 @@
+{% extends "layout.html" %}
+{% block title %}编辑周报 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <a href="{{ url_for('intern_weekly_report') }}" style="color:var(--primary); text-decoration:none; font-size:0.9rem;">← 返回周报列表</a>
+    <h1>编辑周报 - 第{{ report.week_number }}周</h1>
+</div>
+
+<div class="card">
+    <div class="card-header">✏️ 编辑周报</div>
+    <form method="POST">
+        <div class="form-group">
+            <label>自评分（1-5星）</label>
+            <select name="self_rating" class="form-control">
+                <option value="1" {% if report.self_rating == 1 %}selected{% endif %}>⭐ 1分 - 需要很大改进</option>
+                <option value="2" {% if report.self_rating == 2 %}selected{% endif %}>⭐⭐ 2分 - 有进步空间</option>
+                <option value="3" {% if report.self_rating == 3 %}selected{% endif %}>⭐⭐⭐ 3分 - 表现一般</option>
+                <option value="4" {% if report.self_rating == 4 %}selected{% endif %}>⭐⭐⭐⭐ 4分 - 表现不错</option>
+                <option value="5" {% if report.self_rating == 5 %}selected{% endif %}>⭐⭐⭐⭐⭐ 5分 - 非常优秀</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>本周工作内容</label>
+            <textarea name="content" class="form-control" rows="8" required>{{ report.content }}</textarea>
+        </div>
+        <div style="display:flex; gap:8px;">
+            <button type="submit" class="btn btn-primary">保存修改</button>
+            <a href="{{ url_for('intern_weekly_report') }}" class="btn btn-secondary">取消</a>
+        </div>
+    </form>
+</div>
+
+{% if report.mentor_comment %}
+<div class="card">
+    <div class="card-header">💬 导师评语</div>
+    <div style="padding:8px; background:var(--primary-bg); border-radius:var(--radius-sm); font-size:0.9rem;">
+        {{ report.mentor_comment }}
+    </div>
+    {% if report.mentor_reviewed_at %}
+    <div class="text-muted" style="font-size:0.75rem; margin-top:8px;">评语时间: {{ report.mentor_reviewed_at[:10] }}</div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

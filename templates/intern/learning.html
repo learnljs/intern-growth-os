@@ -1,0 +1,27 @@
+{% extends "layout.html" %}
+{% block title %}学习资料 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📚 学习资料</h1>
+    <p>部门分享的学习资料和知识文档</p>
+</div>
+
+{% for m in materials %}
+<div class="card mb-16">
+    <div class="flex-between" style="margin-bottom:8px;">
+        <div>
+            <span class="badge badge-{% if m.category=='technical' %}info{% elif m.category=='business' %}success{% elif m.category=='communication' %}warning{% else %}ok{% endif %}">
+                {% if m.category=='technical' %}技术分享{% elif m.category=='business' %}业务知识{% elif m.category=='communication' %}沟通协作{% elif m.category=='growth' %}成长指南{% else %}综合资料{% endif %}
+            </span>
+            <span style="font-weight:600; margin-left:8px;">{{ m.title }}</span>
+        </div>
+        <div class="text-muted" style="font-size:0.75rem;">{{ m.created_at[:10] }} · {{ m.author_name }}</div>
+    </div>
+    <div style="padding:12px; background:var(--bg-secondary); border-radius:var(--radius-sm); font-size:0.85rem; line-height:1.8;">{{ m.content|safe }}</div>
+</div>
+{% endfor %}
+
+{% if not materials %}
+<div class="card text-center text-muted" style="padding:40px;">暂无学习资料</div>
+{% endif %}
+{% endblock %}

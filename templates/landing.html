@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}实习能量站 - Intern Growth OS{% endblock %}
+{% block body %}
+<div class="landing-page">
+    <div class="landing-hero">
+        <div class="landing-brand">
+            <h1>🌱 实习能量站</h1>
+            <div class="landing-subtitle">Intern Growth OS</div>
+            <p class="landing-desc">AI 驱动的实习生成长导航与带教协同平台</p>
+        </div>
+
+        <div class="landing-features">
+            <div class="feature-card">
+                <div class="feature-icon">🎮</div>
+                <h3>游戏化成长</h3>
+                <p>Growth Twin 数字分身，等级经验值系统，让成长可视化</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3>六维能力评估</h3>
+                <p>技术、沟通、业务、成长、问题解决、工程素养全方位评估</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌳</div>
+                <h3>技能树系统</h3>
+                <p>岗位专属技能路径，解锁技能推动等级提升</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <h3>AI 成长助手</h3>
+                <p>DeepSeek 驱动的智能问答，个性化成长建议</p>
+            </div>
+        </div>
+
+        <div class="landing-roles">
+            <h2>选择你的身份</h2>
+            <div class="role-grid">
+                <a href="{{ url_for('login', role='intern') }}" class="role-card role-intern">
+                    <div class="role-icon">👨‍💻</div>
+                    <h3>实习生</h3>
+                    <p>查看成长地图、完成任务、提交周报、获取AI分析</p>
+                    <span class="role-btn">登录 / 注册</span>
+                </a>
+                <a href="{{ url_for('login', role='mentor') }}" class="role-card role-mentor">
+                    <div class="role-icon">👨‍🏫</div>
+                    <h3>带教导师</h3>
+                    <p>一对一指导实习生、分配任务、给予反馈、AI带教助手</p>
+                    <span class="role-btn">登录 / 注册</span>
+                </a>
+                <a href="{{ url_for('login', role='leader') }}" class="role-card role-leader">
+                    <div class="role-icon">🎯</div>
+                    <h3>部门主管</h3>
+                    <p>查看部门人才概况、识别高潜人才、人才决策支持</p>
+                    <span class="role-btn">登录 / 注册</span>
+                </a>
+                <a href="{{ url_for('login', role='admin') }}" class="role-card role-admin">
+                    <div class="role-icon">⚙️</div>
+                    <h3>管理员</h3>
+                    <p>用户管理、导师分配、技能树设置</p>
+                    <span class="role-btn" style="background: #607D8B;">登录</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="landing-footer">
+            <p>© 2026 Intern Growth OS · 让实习生成长过程可视化 · 可预测 · 可干预</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.landing-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #fff5e6 0%, #fff 50%, #f0f7ff 100%);
+}
+.landing-hero {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+.landing-brand {
+    text-align: center;
+    margin-bottom: 48px;
+}
+.landing-brand h1 {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+    color: #333;
+}
+.landing-subtitle {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 16px;
+}
+.landing-desc {
+    font-size: 1rem;
+    color: #888;
+}
+.landing-features {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 48px;
+}
+.feature-card {
+    background: white;
+    padding: 24px 16px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: transform 0.2s;
+}
+.feature-card:hover {
+    transform: translateY(-4px);
+}
+.feature-icon {
+    font-size: 2rem;
+    margin-bottom: 12px;
+}
+.feature-card h3 {
+    font-size: 1rem;
+    margin-bottom: 8px;
+    color: #333;
+}
+.feature-card p {
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 1.5;
+}
+.landing-roles {
+    text-align: center;
+    margin-bottom: 48px;
+}
+.landing-roles h2 {
+    font-size: 1.5rem;
+    margin-bottom: 24px;
+    color: #333;
+}
+.role-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+}
+.role-card {
+    background: white;
+    padding: 32px 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    color: inherit;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+.role-card h3, .role-card p {
+    width: 100%;
+}
+.role-card .role-btn {
+    margin-top: auto;
+}
+.role-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+.role-intern:hover { border-color: #F5A623; }
+.role-mentor:hover { border-color: #4CAF50; }
+.role-leader:hover { border-color: #9C27B0; }
+.role-admin:hover { border-color: #607D8B; }
+.role-admin .role-btn { background: #607D8B; }
+.role-icon {
+    font-size: 2.5rem;
+    margin-bottom: 12px;
+}
+.role-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: #333;
+}
+.role-card p {
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+.role-btn {
+    display: inline-block;
+    padding: 8px 24px;
+    background: #F5A623;
+    color: white;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+.role-mentor .role-btn { background: #4CAF50; }
+.role-hr .role-btn { background: #2196F3; }
+.role-leader .role-btn { background: #9C27B0; }
+.landing-footer {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.8rem;
+}
+@media (max-width: 768px) {
+    .landing-features, .role-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .demo-accounts {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+{% endblock %}

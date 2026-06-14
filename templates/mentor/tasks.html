@@ -1,0 +1,184 @@
+{% extends "layout.html" %}
+{% block title %}任务管理 - 实习能量站{% endblock %}
+{% block content %}
+<style>
+.create-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.create-header { cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.create-title { font-weight: 600; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+.create-toggle { font-size: 14px; transition: transform 0.2s; color: #999; }
+.create-form { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px solid #eee; }
+.create-form.active { display: block; }
+
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; font-weight: 500; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+.form-group textarea { resize: vertical; min-height: 80px; font-family: inherit; }
+
+.task-card { background: white; border-radius: 12px; padding: 16px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-left: 4px solid {{ theme.primary }}; }
+.task-card.completed { border-left-color: #4CAF50; opacity: 0.85; }
+.task-card.overdue { border-left-color: #f44336; }
+.task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.task-title { font-weight: 600; font-size: 15px; flex: 1; }
+.task-meta { display: flex; gap: 12px; font-size: 12px; color: #666; flex-wrap: wrap; align-items: center; }
+.task-meta span { display: flex; align-items: center; gap: 4px; }
+.task-desc { font-size: 13px; color: #555; margin: 8px 0; padding: 10px; background: #f8f9fa; border-radius: 6px; line-height: 1.6; }
+.status-badge { padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.status-pending { background: #FFF3E0; color: #E65100; }
+.status-in_progress { background: #E3F2FD; color: #1976D2; }
+.status-completed { background: #E8F5E9; color: #2E7D32; }
+.status-overdue { background: #FFEBEE; color: #C62828; }
+.btn-delete { background: #f44336; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.btn-create { background: linear-gradient(135deg, {{ theme.primary }} 0%, {{ theme.primary_dark }} 100%); color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.empty-state { text-align: center; padding: 60px; color: #999; }
+.filter-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+.filter-tab { padding: 6px 14px; background: white; border: 1px solid #ddd; border-radius: 16px; cursor: pointer; font-size: 13px; transition: all 0.2s; }
+.filter-tab.active { background: {{ theme.primary }}; color: white; border-color: {{ theme.primary }}; }
+</style>
+
+<div class="page-header">
+    <h1>📋 任务管理</h1>
+    <p>为实习生分配成长任务，跟踪完成情况</p>
+</div>
+
+<!-- 创建新任务（可折叠） -->
+<div class="create-card">
+    <div class="create-header" onclick="toggleCreateForm()">
+        <div class="create-title">
+            ➕ 创建新任务
+            <span style="font-size: 12px; font-weight: normal; color: #999;">（点击展开）</span>
+        </div>
+        <span class="create-toggle" id="create-toggle">▼</span>
+    </div>
+    
+    <div class="create-form" id="create-form">
+        {% if not interns %}
+        <div style="background: #FFF3E0; padding: 12px; border-radius: 8px; color: #E65100;">
+            ⚠️ 您当前没有带教的实习生，无法分配任务
+        </div>
+        {% else %}
+        <form method="POST" action="{{ url_for('mentor_create_task') }}">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>任务标题 *</label>
+                    <input type="text" name="title" required placeholder="如：完成 React 入门教程">
+                </div>
+                <div class="form-group">
+                    <label>分配给 *</label>
+                    <select name="intern_id" required>
+                        <option value="">-- 选择实习生 --</option>
+                        {% for i in interns %}
+                        <option value="{{ i.profile_id }}">{{ i.name }} ({{ i.position or '未设置岗位' }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>难度（1-5）</label>
+                    <select name="difficulty">
+                        <option value="1">⭐ 简单</option>
+                        <option value="2" selected>⭐⭐ 较易</option>
+                        <option value="3">⭐⭐⭐ 中等</option>
+                        <option value="4">⭐⭐⭐⭐ 较难</option>
+                        <option value="5">⭐⭐⭐⭐⭐ 困难</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>XP 奖励</label>
+                    <input type="number" name="xp_reward" value="50" min="10" max="500">
+                </div>
+            </div>
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label>截止日期</label>
+                <input type="date" name="due_date">
+            </div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label>任务描述</label>
+                <textarea name="description" placeholder="详细描述任务的要求、目标和验收标准..."></textarea>
+            </div>
+            <button type="submit" class="btn-create">📌 创建并分配任务</button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 任务列表 -->
+<div class="filter-tabs">
+    <div class="filter-tab active" onclick="filterTasks('all')">全部</div>
+    <div class="filter-tab" onclick="filterTasks('pending')">待开始</div>
+    <div class="filter-tab" onclick="filterTasks('in_progress')">进行中</div>
+    <div class="filter-tab" onclick="filterTasks('completed')">已完成</div>
+    <div class="filter-tab" onclick="filterTasks('overdue')">已逾期</div>
+</div>
+
+<div id="task-list">
+    {% if not assignments %}
+    <div class="card empty-state">
+        <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
+        <p>暂无已分配的任务</p>
+        <p style="font-size: 13px; color: #aaa;">点击上方"创建新任务"开始分配</p>
+    </div>
+    {% else %}
+    {% for a in assignments %}
+    <div class="task-card {{ a.status }}" data-status="{{ a.status }}">
+        <div class="task-header">
+            <span class="task-title">{{ a.title }}</span>
+            <span class="status-badge status-{{ a.status }}">
+                {% if a.status == 'pending' %}待开始
+                {% elif a.status == 'in_progress' %}进行中
+                {% elif a.status == 'completed' %}已完成
+                {% else %}已逾期
+                {% endif %}
+            </span>
+        </div>
+        <div class="task-meta">
+            <span>👤 <strong>{{ a.intern_name }}</strong></span>
+            <span>{% for i in range(a.difficulty) %}⭐{% endfor %}</span>
+            <span>💎 {{ a.xp_reward }} XP</span>
+            {% if a.due_date %}
+            <span>📅 {{ a.due_date }}</span>
+            {% endif %}
+            {% if a.completed_at %}
+            <span style="color: #2E7D32;">✅ {{ a.completed_at[:10] }}</span>
+            {% endif %}
+        </div>
+        {% if a.description %}
+        <div class="task-desc">{{ a.description }}</div>
+        {% endif %}
+        <div style="margin-top: 10px; text-align: right;">
+            <form method="POST" action="{{ url_for('mentor_delete_task', assignment_id=a.id) }}" style="display: inline;">
+                <button type="submit" class="btn-delete" onclick="return confirm('确定删除该任务？')">🗑️ 删除</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+</div>
+
+<script>
+function toggleCreateForm() {
+    const form = document.getElementById('create-form');
+    const toggle = document.getElementById('create-toggle');
+    if (form.classList.contains('active')) {
+        form.classList.remove('active');
+        toggle.style.transform = 'rotate(0deg)';
+    } else {
+        form.classList.add('active');
+        toggle.style.transform = 'rotate(180deg)';
+    }
+}
+
+function filterTasks(status) {
+    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    document.querySelectorAll('.task-card').forEach(card => {
+        if (status === 'all' || card.dataset.status === status) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

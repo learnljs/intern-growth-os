@@ -1,0 +1,135 @@
+{% extends "layout.html" %}
+{% block title %}反馈管理 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>💬 反馈管理</h1>
+    <p>给实习生写反馈，更新六维能力评分</p>
+</div>
+
+<!-- 写新反馈 - 可折叠 -->
+<div class="card mb-16">
+    <div class="card-header" style="cursor:pointer;" onclick="toggleForm()">
+        ✍️ 写新反馈 <span id="form-toggle-icon">▼</span>
+    </div>
+    <div id="feedback-form" style="display:none;">
+        <form method="POST">
+            <div class="grid grid-2">
+                <div class="form-group">
+                    <label>选择实习生</label>
+                    <select name="intern_id" class="form-control" required>
+                        {% for i in interns %}
+                        <option value="{{ i.id }}">{{ i.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>反馈类型</label>
+                    <select name="type" class="form-control">
+                        <option value="weekly">周度反馈</option>
+                        <option value="milestone">里程碑反馈</option>
+                        <option value="ad_hoc">即时反馈</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>反馈内容</label>
+                <textarea name="content" class="form-control" rows="3" required placeholder="请输入反馈内容..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>整体评分（1-5星）</label>
+                <select name="rating" class="form-control">
+                    <option value="1">⭐ 1分</option>
+                    <option value="2">⭐⭐ 2分</option>
+                    <option value="3">⭐⭐⭐ 3分</option>
+                    <option value="4" selected>⭐⭐⭐⭐ 4分</option>
+                    <option value="5">⭐⭐⭐⭐⭐ 5分</option>
+                </select>
+            </div>
+            <div class="card-header" style="margin-top:8px; padding:8px 0;">📊 六维能力评分</div>
+            <div class="grid grid-3" style="gap:8px;">
+                {% for name in ['技术能力', '沟通协作', '业务理解', '主动成长', '问题解决', '工程素养'] %}
+                {% set idx = loop.index %}
+                <div class="form-group" style="margin-bottom:4px;">
+                    <label style="font-size:0.75rem;">{{ name }}</label>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <input type="range" name="dim_{{ idx }}" min="0" max="100" value="70" style="flex:1;" oninput="this.nextElementSibling.textContent=this.value">
+                        <span style="font-size:0.8rem; min-width:24px;">70</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            <button type="submit" class="btn btn-primary" style="margin-top:12px;">提交反馈</button>
+        </form>
+    </div>
+</div>
+
+<!-- 反馈历史 -->
+<div class="card">
+    <div class="card-header">📚 反馈历史</div>
+    {% for h in history %}
+    <div class="feedback-item" onclick="toggleDetail(this)" style="padding:12px 0; border-bottom:1px solid var(--border); font-size:0.85rem; cursor:pointer;">
+        <div class="flex-between">
+            <span>
+                <strong>{{ h.intern_name }}</strong> · 
+                <span style="color:var(--primary);">{{ '周度' if h.type=='weekly' else '里程碑' if h.type=='milestone' else '即时' }}</span>
+                {% if h.rating %}{% for i in range(h.rating) %}⭐{% endfor %}{% endif %}
+            </span>
+            <span style="display:flex; align-items:center; gap:8px;">
+                <span class="text-muted" style="font-size:0.75rem;">{{ h.created_at[:10] }}</span>
+                <span class="toggle-icon">▶</span>
+            </span>
+        </div>
+        <div class="feedback-summary" style="color:var(--text-secondary); margin-top:4px;">{{ h.content[:80] }}{% if h.content|length > 80 %}...{% endif %}</div>
+        <div class="feedback-detail" style="display:none; margin-top:8px; padding:12px; background:#fafafa; border-radius:8px; font-size:0.85rem;">
+            <div style="margin-bottom:12px; line-height:1.6;">{{ h.content }}</div>
+            <div style="border-top:1px solid var(--border); padding-top:12px;">
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:8px;">整体评分：{% if h.rating %}{% for i in range(h.rating) %}⭐{% endfor %}{% endif %}</div>
+                {% if h.dimension_scores and h.dimension_scores is not string %}
+                <div style="font-size:0.75rem; color:var(--text-muted); margin-bottom:4px;">六维评分</div>
+                <div style="display:flex; flex-wrap:wrap; gap:4px;">
+                    {% set dim_names = {'1': '技术能力', '2': '沟通协作', '3': '业务理解', '4': '主动成长', '5': '问题解决', '6': '工程素养'} %}
+                    {% for dim, score in h.dimension_scores.items() %}
+                    <span style="padding:2px 8px; background:white; border-radius:4px; font-size:0.75rem;">{{ dim_names.get(dim, dim) }}: <strong>{{ score }}</strong></span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    {% if not history %}
+    <div class="text-muted text-center" style="padding:16px;">暂无反馈记录</div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm() {
+    const form = document.getElementById('feedback-form');
+    const icon = document.getElementById('form-toggle-icon');
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        icon.textContent = '▲';
+    } else {
+        form.style.display = 'none';
+        icon.textContent = '▼';
+    }
+}
+
+function toggleDetail(el) {
+    const detail = el.querySelector('.feedback-detail');
+    const summary = el.querySelector('.feedback-summary');
+    const icon = el.querySelector('.toggle-icon');
+    if (detail.style.display === 'none') {
+        detail.style.display = 'block';
+        summary.style.display = 'none';
+        icon.textContent = '▼';
+    } else {
+        detail.style.display = 'none';
+        summary.style.display = 'block';
+        icon.textContent = '▶';
+    }
+}
+</script>
+{% endblock %}

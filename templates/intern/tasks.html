@@ -1,0 +1,47 @@
+{% extends "layout.html" %}
+{% block title %}成长任务 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📋 成长任务</h1>
+    <p>完成任务获得经验值，推动等级提升</p>
+</div>
+
+<div class="card mb-16">
+    <div class="flex gap-8">
+        <a href="?status=all" class="btn btn-sm {% if current_filter=='all' %}btn-primary{% else %}btn-secondary{% endif %}">全部</a>
+        <a href="?status=pending" class="btn btn-sm {% if current_filter=='pending' %}btn-primary{% else %}btn-secondary{% endif %}">待开始</a>
+        <a href="?status=in_progress" class="btn btn-sm {% if current_filter=='in_progress' %}btn-primary{% else %}btn-secondary{% endif %}">进行中</a>
+        <a href="?status=completed" class="btn btn-sm {% if current_filter=='completed' %}btn-primary{% else %}btn-secondary{% endif %}">已完成</a>
+        <a href="?status=overdue" class="btn btn-sm {% if current_filter=='overdue' %}btn-primary{% else %}btn-secondary{% endif %}">已逾期</a>
+    </div>
+</div>
+
+{% for t in tasks %}
+<a href="{{ url_for('intern_task_detail', assignment_id=t.id) }}" style="text-decoration:none; color:inherit;">
+<div class="card" style="cursor:pointer; transition:box-shadow 0.2s;" onmouseover="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'" onmouseout="this.style.boxShadow='none'">
+    <div class="flex-between">
+        <div style="flex:1;">
+            <div class="flex-center gap-8" style="margin-bottom:6px;">
+                <span class="badge badge-{{ t.status }}">{{ t.status }}</span>
+                <span style="font-weight:600;">{{ t.title }}</span>
+            </div>
+            <div class="text-muted" style="font-size:0.8rem;">{{ t.description }}</div>
+            <div style="margin-top:8px; font-size:0.8rem;">
+                <span class="badge badge-info">{{ t.category }}</span>
+                <span style="margin-left:8px;">难度: {% for i in range(t.difficulty) %}⭐{% endfor %}</span>
+                <span style="margin-left:8px; color:var(--primary-dark); font-weight:600;">+{{ t.xp_reward }}XP</span>
+                <span style="margin-left:8px; color:var(--text-muted);">截止 {{ t.due_date }}</span>
+            </div>
+        </div>
+        <div>
+            <span style="color:var(--text-muted); font-size:1.2rem;">→</span>
+        </div>
+    </div>
+</div>
+</a>
+{% endfor %}
+
+{% if not tasks %}
+<div class="card text-center text-muted" style="padding:40px;">暂无任务</div>
+{% endif %}
+{% endblock %}

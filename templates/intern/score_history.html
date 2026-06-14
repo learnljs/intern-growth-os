@@ -1,0 +1,60 @@
+{% extends "layout.html" %}
+{% block title %}评分历史 - 实习能量站{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h1>📊 评分历史</h1>
+    <p>追踪六维能力评分的变化轨迹</p>
+</div>
+
+<div class="card mb-16">
+    <div class="card-header">📈 当前评分</div>
+    <div style="display:flex; flex-wrap:wrap; gap:16px; padding:8px 0;">
+        {% for dim, score in current_scores.items() %}
+        <div style="text-align:center; min-width:80px;">
+            <div style="font-size:1.2rem; font-weight:700; color:var(--primary-dark);">{{ score }}</div>
+            <div style="font-size:0.75rem; color:var(--text-muted);">{{ dim }}</div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">📜 评分变更记录</div>
+    {% if history %}
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; font-size:0.8rem;">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border); text-align:center;">
+                    <th style="padding:8px; width:150px;">时间</th>
+                    {% for dim in dimension_names %}
+                    <th style="padding:8px;">{{ dim }}</th>
+                    {% endfor %}
+                    <th style="padding:8px; width:100px;">操作人</th>
+                    <th style="padding:8px; width:100px;">原因</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in history %}
+                <tr style="border-bottom:1px solid var(--border);">
+                    <td style="padding:8px; color:var(--text-muted); text-align:left;">{{ record.time }}</td>
+                    {% for dim in dimension_names %}
+                    <td style="padding:8px; text-align:center;">
+                        {% if record.dimensions.get(dim) %}
+                            <span style="font-weight:600; color:var(--primary-dark);">{{ record.dimensions[dim] }}</span>
+                        {% else %}
+                            <span style="color:var(--text-muted);">-</span>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                    <td style="padding:8px; text-align:center;">{{ record.changed_by }}</td>
+                    <td style="padding:8px; text-align:center; color:var(--text-secondary);">{{ record.change_reason }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-muted text-center" style="padding:40px;">暂无评分变更记录</div>
+    {% endif %}
+</div>
+{% endblock %}
