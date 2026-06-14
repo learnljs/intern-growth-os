@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from functools import wraps
 from io import BytesIO
 
+from dotenv import load_dotenv
 from flask import (Flask, render_template, request, redirect, url_for,
                    session, jsonify, g, flash, send_file)
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -12,6 +13,9 @@ from werkzeug.utils import secure_filename
 
 from config import Config
 from init_db import get_db, setup_db
+
+# 加载 .env 文件中的环境变量（必须在读取 Config 之前）
+load_dotenv()
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -718,9 +722,6 @@ def intern_learning():
 
 # ── API endpoints ────────────────────────────────────────
 
-DEEPSEEK_API_KEY = 'sk-880e315ad2604bbc8fcbe46bcd613eeb'
-DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
-
 @app.route('/api/intern/ai-chat', methods=['POST'])
 @login_required
 @role_required('intern')
@@ -776,7 +777,7 @@ def api_ai_chat():
 
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+        client = OpenAI(api_key=Config.DEEPSEEK_API_KEY, base_url=Config.DEEPSEEK_BASE_URL)
         
         response = client.chat.completions.create(
             model="deepseek-chat",
@@ -1335,7 +1336,7 @@ def api_mentor_plan(intern_id):
     
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+        client = OpenAI(api_key=Config.DEEPSEEK_API_KEY, base_url=Config.DEEPSEEK_BASE_URL)
         
         response = client.chat.completions.create(
             model="deepseek-chat",
@@ -1376,7 +1377,7 @@ def mentor_ai_copilot():
 
             try:
                 from openai import OpenAI
-                client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+                client = OpenAI(api_key=Config.DEEPSEEK_API_KEY, base_url=Config.DEEPSEEK_BASE_URL)
                 
                 response = client.chat.completions.create(
                     model="deepseek-chat",
@@ -1416,7 +1417,7 @@ def api_mentor_ai_chat():
     
     try:
         from openai import OpenAI
-        client = OpenAI(api_key=DEEPSEEK_API_KEY, base_url=DEEPSEEK_BASE_URL)
+        client = OpenAI(api_key=Config.DEEPSEEK_API_KEY, base_url=Config.DEEPSEEK_BASE_URL)
         
         response = client.chat.completions.create(
             model="deepseek-chat",
