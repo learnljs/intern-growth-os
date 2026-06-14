@@ -128,7 +128,6 @@ Intern Growth OS/
 ## 📄 文档
 
 - [需求规格说明书](DOC/SPEC.md)
-- [部署指南](DOC/DEPLOY.md)
 - [方案说明（1000字）](DOC/PROPOSAL.md)
 
 ***
