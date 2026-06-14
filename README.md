@@ -71,13 +71,18 @@
 # 1. 安装依赖
 pip install -r requirements.txt
 
-# 2. 初始化数据库
+# 2. 配置 AI API（可选，否则使用 Mock 模式）
+#    复制配置文件并填入自己的 API Key
+cp .env.example .env
+#    编辑 .env 文件，将 DEEPSEEK_API_KEY 设为你的 Key
+
+# 3. 初始化数据库
 python init_db.py
 
-# 3. 启动服务
+# 4. 启动服务
 python app.py
 
-# 4. 打开浏览器访问
+# 5. 打开浏览器访问
 # http://127.0.0.1:5000
 ```
 
@@ -134,12 +139,31 @@ Intern Growth OS/
 
 ## 🛠️ 配置 AI API
 
-在 `app.py` 中找到以下配置项，替换为你的 API Key：
+> **注意**：本项目中的 AI 对话、智能培养计划等功能依赖 DeepSeek API，使用者需要自行配置 API Key。
 
-```python
-DEEPSEEK_API_KEY = 'sk-你的API-KEY'
-DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
+### 方式一：.env 文件（推荐）
+
+复制模板文件并填入自己的 Key：
+
+```bash
+cp .env.example .env
 ```
+
+然后编辑 `.env` 文件，修改 `DEEPSEEK_API_KEY` 为你自己的 Key。`.env` 文件已加入 `.gitignore`，不会误提交到代码仓库。
+
+### 方式二：系统环境变量
+
+直接设置系统环境变量即可：
+
+```bash
+# Windows PowerShell
+$env:DEEPSEEK_API_KEY="sk-你的API-KEY"
+$env:DEEPSEEK_BASE_URL="https://api.deepseek.com"
+```
+
+### 未配置 API Key 时的行为
+
+若未配置 API Key，AI 功能会提示服务不可用，其余核心功能（任务、周报、评分、技能树等）均不受影响，可正常使用。
 
 ***
 
