@@ -11,11 +11,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 
 from config import Config
-from init_db import get_db
+from init_db import get_db, setup_db
 
 app = Flask(__name__)
 app.config.from_object(Config)
 app.secret_key = Config.SECRET_KEY
+
+# 启动时自动初始化数据库（建表 + 种子数据）
+setup_db()
 
 
 # ── helpers ──────────────────────────────────────────────
@@ -1665,4 +1668,4 @@ def admin_delete_skill(template_id):
 # ── Run ──────────────────────────────────────────────────
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0', port=int(os.getenv('PORT', 5000)), debug=False)

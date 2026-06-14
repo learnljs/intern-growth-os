@@ -1,6 +1,7 @@
 import sqlite3
 import os
 from config import Config
+from werkzeug.security import generate_password_hash
 
 def get_db():
     db = sqlite3.connect(Config.DATABASE)
@@ -193,7 +194,54 @@ def init_db():
     
     db.commit()
     db.close()
-    print("Database initialized successfully.")
+    print("Database tables initialized successfully.")
+
+
+def seed_db():
+    """插入种子数据：管理员账号 + 六维能力维度"""
+    db = get_db()
+
+    # ── 1. 管理员账号（幂等：已存在则跳过）──
+    admin_exists = db.execute("SELECT id FROM users WHERE email='admin@growth.com'").fetchone()
+    if not admin_exists:
+        db.execute(
+            "INSERT INTO users (email, password_hash, name, role, department, position) VALUES (?,?,?,?,?,?)",
+            ('admin@growth.com', generate_password_hash('admin123'), '系统管理员', 'admin', '管理部', '管理员')
+        )
+        print("Seed: admin user created (admin@growth.com / admin123)")
+    else:
+        print("Seed: admin user already exists, skipped")
+
+    # ── 2. 六维能力维度（幂等：已存在则跳过）──
+    dimensions = [
+        ('技术能力', '编程、调试、架构设计等技术相关能力', 100),
+        ('沟通协作', '团队沟通、跨部门协作、文档撰写', 100),
+        ('业务理解', '对业务逻辑、产品需求的理解深度', 100),
+        ('主动成长', '自驱学习、主动承担、寻求反馈', 100),
+        ('问题解决', '分析问题、定位根因、提出方案', 100),
+        ('工程素养', '代码规范、测试习惯、版本管理', 100),
+    ]
+    for name, desc, max_score in dimensions:
+        exists = db.execute("SELECT id FROM skill_dimensions WHERE name=?", (name,)).fetchone()
+        if not exists:
+            db.execute(
+                "INSERT INTO skill_dimensions (name, description, max_score) VALUES (?,?,?)",
+                (name, desc, max_score)
+            )
+            print(f"Seed: dimension '{name}' created")
+        else:
+            print(f"Seed: dimension '{name}' already exists, skipped")
+
+    db.commit()
+    db.close()
+    print("Seed data initialized successfully.")
+
+
+def setup_db():
+    """一键初始化：建表 + 种子数据"""
+    init_db()
+    seed_db()
+
 
 if __name__ == '__main__':
-    init_db()
+    setup_db()
